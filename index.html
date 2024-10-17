@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partage ta Position</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Partage ta Position avec moi !</h1>
+    <p>Clique sur le bouton ci-dessous pour partager ta localisation (avec ton consentement).</p>
+    <button onclick="getLocation()">Partager ma Position</button>
+
+    <p id="status"></p>
+
+    <script>
+        // Fonction pour obtenir la localisation et envoyer à Firebase
+        function getLocation() {
+            const status = document.getElementById('status');
+
+            if ('geolocation' in navigator) {
+                status.textContent = 'Obtention de ta position...';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        status.innerHTML = `Latitude : ${latitude} <br> Longitude : ${longitude}`;
+
+                        // Envoi des données vers Firebase
+                        envoyerLocalisation(latitude, longitude);
+                    },
+                    () => {
+                        status.textContent = 'Impossible de récupérer la position.';
+                    }
+                );
+            } else {
+                status.textContent = 'La géolocalisation n’est pas supportée par ton navigateur.';
+            }
+        }
+
+        // Fonction pour envoyer la position vers Firebase
+        function envoyerLocalisation(lat, long) {
+            fetch('https://nouhoum-615e9-default-rtdb.firebaseio.com/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: long,
+                    timestamp: new Date().toISOString(),
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Données envoyées avec succès :', data);
+            })
+            .catch((error) => {
+                console.error('Erreur lors de l\'envoi des données :', error);
+            });
+        }
+    </script>
+
+</body>
+</html>
